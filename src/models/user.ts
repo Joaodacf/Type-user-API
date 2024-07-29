@@ -1,4 +1,4 @@
-import e from "express";
+
 
 export interface IUser {
     id: number;
@@ -15,5 +15,5 @@ export interface IUserCreat {
 
 export interface IresponseUserLogin {
     usuario: Omit<IUser, "senha">;
-    token: string
+
 }

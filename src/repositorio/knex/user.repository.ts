@@ -26,4 +26,6 @@ export class KnexUserRepository implements IUserRepository {
         return await knex('usuarios').where({ id }).update(user);
     }
 
-} 
+}
+
+

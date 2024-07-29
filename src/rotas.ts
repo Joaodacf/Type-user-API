@@ -1,5 +1,5 @@
 import express from 'express'
-import { AtualizarUsuario, CadastroUsuario, DeletarUsuario, ListarUsuario, loginUsuario } from './controladores/usuario';
+import { AtualizarUsuario, CadastroUsuario, DeletarUsuario, ListarUsuario, loginUsuario, verificarCodigo } from './controladores/usuario';
 import validarRequisicao from './midlewares/midlesSchema';
 import { userSchema } from './schema/user.schema';
 import { userLoginSchema } from './schema/user-login-schema';
@@ -13,4 +13,4 @@ routes.delete('/deletar/:id', DeletarUsuario)
 routes.put('/atualizar/:id', validarRequisicao(userSchema), AtualizarUsuario)
 routes.post('/login', validarRequisicao(userLoginSchema), loginUsuario);
 
-
+routes.post('/codigo', verificarCodigo)

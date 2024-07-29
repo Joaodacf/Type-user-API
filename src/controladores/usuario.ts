@@ -58,3 +58,15 @@ export async function loginUsuario(req: Request, res: Response) {
 
 
 }
+export async function verificarCodigo(req: Request, res: Response) {
+    const { usuario_id, codigo } = req.body;
+    try {
+        const token = await userService.validacaoCodigo(usuario_id, codigo);
+        return res.status(200).json(token);
+    } catch (error: any) {
+        return res.status(400).json({ message: error?.message || "Erro ao logar usuário" });
+    }
+
+
+}
+

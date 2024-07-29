@@ -3,7 +3,12 @@ import { IUser, IUserCreat, IresponseUserLogin } from "../models/user";
 import { IUserRepository } from "../repositorio/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import { GeradorNumerosAleatorios } from "../midlewares/midlesSchema";
+import nodemailer from "nodemailer";
+import { transportar } from "../conection/Email";
+import knex from "knex";
+import { KnexAutenticacaoRepositorio } from "../repositorio/knex/Autenticacao.repositorio";
+const autenticacaoRepository = new KnexAutenticacaoRepositorio();
 
 
 export class UserService {
@@ -60,12 +65,37 @@ export class UserService {
         if (!senhaValida) {
             throw new Error("Email ou senha invalidos")
         }
-        /*  if (!process.env.SECRET) {
-             throw new Error("Variavel de ambiente SECRET não definida")
-         } */
-        const Token = jwt.sign({ id: usuario.id }, process.env.SENHAJWT as string, { expiresIn: "1h" }); {
-        }
+
+        const gerador = new GeradorNumerosAleatorios(9);
+        const numeroAleatorio = gerador.cincoNumerosAleatorios();
+        // to do send email to user  with numeroAleatorio 
+        transportar.sendMail({
+            from: `${process.env.EMAIL_NAME} <${process.env.EMAIL_FROM}>`,
+            to: `${usuario.nome} <${usuario.email}>`,
+            subject: "Codigo de verificação",
+            text: `Seu código de verificação é ${numeroAleatorio}`
+        })
+        await autenticacaoRepository.createCode(usuario.id, numeroAleatorio, new Date(Date.now() + 60000 * 15));
         const { senha: _, ...usuarioLogado } = usuario;
-        return { usuario: usuarioLogado, token: Token }
+        return { usuario: usuarioLogado, }
+
+    }
+    async validacaoCodigo(usuario_id: number, codigo: string) {
+        const usuario = await autenticacaoRepository.getCodeByUserId(usuario_id)
+        if (!usuario.length) {
+            throw new Error("Usuario não encontrado")
+        }
+        const verificarCodigo = usuario.find((user) => user.codigo === codigo)
+        if (!verificarCodigo) {
+            throw new Error("Codigo não encontrado")
+        }
+        if (verificarCodigo.expira < new Date()) {
+            throw new Error("Codigo expirado , solicite um novo codigo")
+        }
+        const Token = jwt.sign({ id: usuario_id }, process.env.SENHAJWT as string, { expiresIn: "1h" });
+        await autenticacaoRepository.deleteCode(verificarCodigo.id);
+
+        return { Token };
+
     }
 }
